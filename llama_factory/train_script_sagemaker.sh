@@ -1,13 +1,4 @@
 #!/bin/bash
-DIR=`pwd`
-
-# Guide:
-# This script supports distributed training on multi-gpu workers (as well as single-worker training).
-# Please set the options below according to the comments.
-# For multi-gpu workers training, these options should be manually set for each worker.
-# After setting the options, please run the script on each worker.
-
-# Number of GPUs per GPU worker
 
 MODEL="/tmp/pretrain_model"
 
@@ -17,7 +8,7 @@ accelerate launch \
     --stage sft \
     --do_train \
     --model_name_or_path $MODEL \
-    --dataset evol_instruct_code_12k,glaive_toolcall \
+    --dataset evol_instruct_code_12k \
     --dataset_dir data \
     --template deepseekcoder \
     --finetuning_type lora \
@@ -46,6 +37,7 @@ accelerate launch \
     --plot_loss \
     --fp16 \
     --load_best_model_at_end False \
+    --quantization_bit 8 \
     --report_to wandb
     # --flash_attn True \
 if [ $? -eq 1 ]; then

@@ -17,4 +17,4 @@ matplotlib
 fire
 deepspeed
 wandb
-flash-attn
+bitsandbytes>=0.37.0
