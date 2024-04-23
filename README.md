@@ -4,6 +4,17 @@
 
 ```
 |-- llama_factory                    # 依赖的LLama Factory 实现代码
+|   |-- ac_config.yaml                   # accelerat 配置文件
+|   |-- data                             # 训练数据
+|   |-- entry.py                         # training job 任务入口文件
+|   |-- evaluation                       # LLama-Factory 文件
+|   |-- examples                         # LLama-Factory 文件
+|   |-- pyproject.toml                   # LLama-Factory 文件
+|   |-- requirements.txt                 # 依赖包
+|   |-- s5cmd                            
+|   |-- scripts                          # LLama-Factory 文件
+|   |-- src                              # LLama-Factory 文件
+|   `-- train_script_sagemaker.sh        # 训练启动脚本
 |-- multi_nodel_deepspeed_lora.ipynb # 在 SageMaker 提交 Training Job 训练任务的示例代码
 `-- README.md
 ```
@@ -11,19 +22,6 @@
 # Training Job
 如果使用 Training Job，可以参考 [multi_nodel_deepspeed_lora.ipynb](https://github.com/xiaoqunnaws/Training_On_SageMaker/blob/main/multi_nodel_deepspeed_lora.ipynb) 这个 notebook 提交任务训练。跟据需要修改对应的训练机器个数以及类型即可。
 
-```
-|-- ac_config.yaml                   # accelerat 配置文件
-|-- data                             # 训练数据
-|-- entry.py                         # training job 任务入口文件
-|-- evaluation                       # LLama-Factory 文件
-|-- examples                         # LLama-Factory 文件
-|-- pyproject.toml                   # LLama-Factory 文件
-|-- requirements.txt                 # 依赖包
-|-- s5cmd                            
-|-- scripts                          # LLama-Factory 文件
-|-- src                              # LLama-Factory 文件
-`-- train_script_sagemaker.sh        # 训练启动脚本
-```
 
 # Notebook/本地环境
 如果使用 Notebook 或者本地机器启动训练任务，直接进入 llama_factory 文件夹，根据需要修改 [train_script_sagemaker.sh](https://github.com/xiaoqunnaws/Training_On_SageMaker/blob/main/llama_factory/train_script_sagemaker.sh) 模型路径即可，其他参数也可根据具体情况进行修改
