@@ -1,4 +1,4 @@
-# Training_On_Sagemaker
+# Training On SageMaker
 
 本项目主要是用 [LLama-Factory](https://github.com/hiyouga/LLaMA-Factory/tree/3e1bf8325c7ae3ad8e6e3ccc1c644d37030c83ff) 这个框架在 SageMaker 上进行 pretrain/sft/rlhf， 可以方便的进行多机多卡或者单机多卡的训练
 
