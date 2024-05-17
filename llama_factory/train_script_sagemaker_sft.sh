@@ -5,17 +5,14 @@ MODEL="/tmp/pretrain_model"
 accelerate launch \
     --config_file ac_config.yaml \
     src/train_bash.py \
-    --stage pt \
+    --stage sft \
     --do_train \
     --model_name_or_path $MODEL \
     --dataset evol_instruct_code_12k \
     --dataset_dir data \
     --template deepseekcoder \
     --finetuning_type lora \
-    --lora_rank 16 \
-    --lora_alpha 16 \
-    --lora_dropout 0.05 \
-    --packing False \
+    --lora_target q_proj,v_proj,o_proj,k_proj \
     --output_dir /tmp/finetuned_model \
     --overwrite_cache \
     --overwrite_output_dir \
