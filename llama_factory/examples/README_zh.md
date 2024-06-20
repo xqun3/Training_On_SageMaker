@@ -1,44 +1,221 @@
-我们提供了多样化的示例脚本。
+我们提供了多样化的大模型微调示例脚本。
 
+请确保在 `LLaMA-Factory` 目录下执行下述命令。
+
+## 目录
+
+- [LoRA 微调](#lora-微调)
+- [QLoRA 微调](#qlora-微调)
+- [全参数微调](#全参数微调)
+- [合并 LoRA 适配器与模型量化](#合并-lora-适配器与模型量化)
+- [推理 LoRA 模型](#推理-lora-模型)
+- [杂项](#杂项)
+
+使用 `CUDA_VISIBLE_DEVICES`（GPU）或 `ASCEND_RT_VISIBLE_DEVICES`（NPU）选择计算设备。
+
+## 示例
+
+### LoRA 微调
+
+#### （增量）预训练
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_pretrain.yaml
 ```
-examples/
-├── lora_single_gpu/
-│   ├── pretrain.sh: 进行预训练
-│   ├── sft.sh: 进行指令监督微调
-│   ├── reward.sh: 进行奖励模型训练
-│   ├── ppo.sh: 进行 PPO 训练
-│   ├── dpo.sh: 进行 DPO 训练
-│   ├── orpo.sh: 进行 ORPO 训练
-│   ├── prepare.sh: 保存预处理后的数据集
-│   └── predict.sh: 进行批量预测
-├── qlora_single_gpu/
-│   ├── bitsandbytes.sh: 微调 4/8 比特 BNB 模型
-│   ├── gptq.sh: 微调 4/8 比特 GPTQ 模型
-│   ├── awq.sh: 微调 4 比特 AWQ 模型
-│   └── aqlm.sh: 微调 2 比特 AQLM 模型
-├── lora_multi_gpu/
-│   ├── single_node.sh: 使用 Accelerate 进行单节点训练
-│   └── multi_node.sh: 使用 Accelerate 进行多节点训练
-├── full_multi_gpu/
-│   ├── single_node.sh: 使用 DeepSpeed 进行单节点训练
-│   └── multi_node.sh: 使用 DeepSpeed 进行多节点训练
-|   └── predict.sh: 使用单卡做全参批量预测
-├── merge_lora/
-│   ├── merge.sh: 将 LoRA 权重合并到预训练模型中
-│   └── quantize.sh: 使用 AutoGPTQ 量化模型
-├── inference/
-│   ├── cli_demo.sh: 启动命令行推理接口
-│   ├── api_demo.sh: 启动 OpenAI 风格 API
-│   ├── web_demo.sh: 启动浏览器推理接口
-│   └── evaluate.sh: 在 MMLU 数据集上评测模型
-└── extras/
-    ├── galore/
-    │   └── sft.sh: 使用 GaLore 训练模型
-    ├── loraplus/
-    │   └── sft.sh: 使用 LoRA+ 训练模型
-    ├── llama_pro/
-    │   ├── expand.sh: 扩展模型中的层
-    │   └── sft.sh: 训练扩展后的模型
-    └── fsdp_qlora/
-        └── sft.sh: 使用 FSDP 微调量化模型
+
+#### 指令监督微调
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_sft.yaml
+```
+
+#### 多模态指令监督微调
+
+```bash
+llamafactory-cli train examples/train_lora/llava1_5_lora_sft.yaml
+```
+
+#### 奖励模型训练
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_reward.yaml
+```
+
+#### PPO 训练
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_ppo.yaml
+```
+
+#### DPO/ORPO/SimPO 训练
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_dpo.yaml
+```
+
+#### KTO 训练
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_kto.yaml
+```
+
+#### 预处理数据集
+
+对于大数据集有帮助，在配置中使用 `tokenized_path` 以加载预处理后的数据集。
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_preprocess.yaml
+```
+
+#### 在 MMLU/CMMLU/C-Eval 上评估
+
+```bash
+llamafactory-cli eval examples/train_lora/llama3_lora_eval.yaml
+```
+
+#### 批量预测并计算 BLEU 和 ROUGE 分数
+
+```bash
+llamafactory-cli train examples/train_lora/llama3_lora_predict.yaml
+```
+
+#### 多机指令监督微调
+
+```bash
+FORCE_TORCHRUN=1 NNODES=2 RANK=0 MASTER_ADDR=192.168.0.1 MASTER_PORT=29500 llamafactory-cli train examples/train_lora/llama3_lora_sft.yaml
+FORCE_TORCHRUN=1 NNODES=2 RANK=1 MASTER_ADDR=192.168.0.1 MASTER_PORT=29500 llamafactory-cli train examples/train_lora/llama3_lora_sft.yaml
+```
+
+#### 使用 DeepSpeed ZeRO-3 平均分配显存
+
+```bash
+FORCE_TORCHRUN=1 llamafactory-cli train examples/train_lora/llama3_lora_sft_ds3.yaml
+```
+
+### QLoRA 微调
+
+#### 基于 4/8 比特 Bitsandbytes 量化进行指令监督微调（推荐）
+
+```bash
+llamafactory-cli train examples/train_qlora/llama3_lora_sft_bitsandbytes.yaml
+```
+
+#### 基于 4/8 比特 GPTQ 量化进行指令监督微调
+
+```bash
+llamafactory-cli train examples/train_qlora/llama3_lora_sft_gptq.yaml
+```
+
+#### 基于 4 比特 AWQ 量化进行指令监督微调
+
+```bash
+llamafactory-cli train examples/train_qlora/llama3_lora_sft_awq.yaml
+```
+
+#### 基于 2 比特 AQLM 量化进行指令监督微调
+
+```bash
+llamafactory-cli train examples/train_qlora/llama3_lora_sft_aqlm.yaml
+```
+
+### 全参数微调
+
+#### 在单机上进行指令监督微调
+
+```bash
+FORCE_TORCHRUN=1 llamafactory-cli train examples/train_full/llama3_full_sft_ds3.yaml
+```
+
+#### 在多机上进行指令监督微调
+
+```bash
+FORCE_TORCHRUN=1 NNODES=2 RANK=0 MASTER_ADDR=192.168.0.1 MASTER_PORT=29500 llamafactory-cli train examples/train_full/llama3_full_sft_ds3.yaml
+FORCE_TORCHRUN=1 NNODES=2 RANK=1 MASTER_ADDR=192.168.0.1 MASTER_PORT=29500 llamafactory-cli train examples/train_full/llama3_full_sft_ds3.yaml
+```
+
+#### 批量预测并计算 BLEU 和 ROUGE 分数
+
+```bash
+llamafactory-cli train examples/train_full/llama3_full_predict.yaml
+```
+
+### 合并 LoRA 适配器与模型量化
+
+#### 合并 LoRA 适配器
+
+注：请勿使用量化后的模型或 `quantization_bit` 参数来合并 LoRA 适配器。
+
+```bash
+llamafactory-cli export examples/merge_lora/llama3_lora_sft.yaml
+```
+
+#### 使用 AutoGPTQ 量化模型
+
+```bash
+llamafactory-cli export examples/merge_lora/llama3_gptq.yaml
+```
+
+### 推理 LoRA 模型
+
+#### 使用命令行接口
+
+```bash
+llamafactory-cli chat examples/inference/llama3_lora_sft.yaml
+```
+
+#### 使用浏览器界面
+
+```bash
+llamafactory-cli webchat examples/inference/llama3_lora_sft.yaml
+```
+
+#### 启动 OpenAI 风格 API
+
+```bash
+llamafactory-cli api examples/inference/llama3_lora_sft.yaml
+```
+
+### 杂项
+
+#### 使用 GaLore 进行全参数训练
+
+```bash
+llamafactory-cli train examples/extras/galore/llama3_full_sft.yaml
+```
+
+#### 使用 BAdam 进行全参数训练
+
+```bash
+llamafactory-cli train examples/extras/badam/llama3_full_sft.yaml
+```
+
+#### LoRA+ 微调
+
+```bash
+llamafactory-cli train examples/extras/loraplus/llama3_lora_sft.yaml
+```
+
+#### PiSSA 微调
+
+```bash
+llamafactory-cli train examples/extras/pissa/llama3_lora_sft.yaml
+```
+
+#### 深度混合微调
+
+```bash
+llamafactory-cli train examples/extras/mod/llama3_full_sft.yaml
+```
+
+#### LLaMA-Pro 微调
+
+```bash
+bash examples/extras/llama_pro/expand.sh
+llamafactory-cli train examples/extras/llama_pro/llama3_freeze_sft.yaml
+```
+
+#### FSDP+QLoRA 微调
+
+```bash
+bash examples/extras/fsdp_qlora/train.sh
 ```

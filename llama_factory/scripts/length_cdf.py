@@ -1,25 +1,39 @@
 # coding=utf-8
-# Calculates the distribution of the input lengths in the dataset.
-# Usage: python length_cdf.py --model_name_or_path path_to_model --dataset alpaca_en --template default
+# Copyright 2024 the LlamaFactory team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from collections import defaultdict
-from typing import Optional
 
 import fire
 from tqdm import tqdm
 
-from llmtuner.data import get_dataset
-from llmtuner.hparams import get_train_args
-from llmtuner.model import load_tokenizer
+from llamafactory.data import get_dataset
+from llamafactory.hparams import get_train_args
+from llamafactory.model import load_tokenizer
 
 
 def length_cdf(
     model_name_or_path: str,
-    dataset: Optional[str] = "alpaca_en",
-    dataset_dir: Optional[str] = "data",
-    template: Optional[str] = "default",
-    interval: Optional[int] = 1000,
+    dataset: str = "alpaca_en",
+    dataset_dir: str = "data",
+    template: str = "default",
+    interval: int = 1000,
 ):
+    r"""
+    Calculates the distribution of the input lengths in the dataset.
+    Usage: python length_cdf.py --model_name_or_path path_to_model --dataset alpaca_en --template default
+    """
     model_args, data_args, training_args, _, _ = get_train_args(
         dict(
             stage="sft",
@@ -32,8 +46,8 @@ def length_cdf(
             overwrite_cache=True,
         )
     )
-    tokenizer = load_tokenizer(model_args)
-    trainset = get_dataset(tokenizer, model_args, data_args, training_args, stage="sft")
+    tokenizer_module = load_tokenizer(model_args)
+    trainset = get_dataset(model_args, data_args, training_args, stage="sft", **tokenizer_module)
     total_num = len(trainset)
     length_dict = defaultdict(int)
     for sample in tqdm(trainset["input_ids"]):

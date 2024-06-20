@@ -43,7 +43,8 @@ if __name__ == "__main__":
         yaml.safe_dump(doc, f)
     #invoke the torch launcher shell script.
     #Note: we will use the s5cmd to speed up the uploading model assets to S3.
-    os.system("chmod +x ./train_script_sagemaker.sh")
+    os.system("chmod +x ./train_script_sagemaker_sft.sh")
+    # os.system("chmod +x ./train_script_sagemaker.sh")
     os.system("chmod +x ./s5cmd")
 
     print("*****************start cp pretrain model*****************************")
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     print(f'-----finished cp-------')
 
 
-    os.system("/bin/bash -c ./train_script_sagemaker.sh")
+    os.system("/bin/bash -c ./train_script_sagemaker_sft.sh")
 
     print("*****************finished training, start cp finetuned model*****************************")
     os.system("./s5cmd sync {0} {1}".format("/tmp/finetuned_model", os.environ['OUTPUT_MODEL_S3_PATH']))
