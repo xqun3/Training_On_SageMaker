@@ -1,10 +1,11 @@
 #!/bin/bash
 
+DISTRIBUTED_ARGS="--nproc_per_node $SM_NUM_GPUS --nnodes $NODE_NUMBER --node_rank $NODE_INDEX --master_addr $SM_MASTER_ADDR --master_port 12345"
 MODEL="/tmp/pretrain_model"
 
-accelerate launch \
-    --config_file ac_config.yaml \
+torchrun ${DISTRIBUTED_ARGS} \
     src/train_bash.py \
+    --deepspeed ds_config.json \
     --stage pt \
     --do_train \
     --model_name_or_path $MODEL \
