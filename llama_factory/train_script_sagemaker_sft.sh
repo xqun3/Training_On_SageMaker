@@ -4,13 +4,13 @@ MODEL="/tmp/pretrain_model"
 
 accelerate launch \
     --config_file ac_config.yaml \
-    src/train_bash.py \
+    src/train.py \
     --stage sft \
     --do_train \
     --model_name_or_path $MODEL \
     --dataset evol_instruct_code_12k \
     --dataset_dir data \
-    --template deepseekcoder \
+    --template llama3 \
     --finetuning_type lora \
     --lora_target all \
     --output_dir /tmp/finetuned_model \
@@ -27,8 +27,8 @@ accelerate launch \
     --save_steps 100 \
     --load_best_model_at_end \
     --learning_rate 1.0e-4 \
-    --lr_scheduler_type: cosine \
-    --warmup_ratio: 0.1 \
+    --lr_scheduler_type cosine \
+    --warmup_ratio 0.1 \
     --fp16 \
     --plot_loss \
     --num_train_epochs 1.0 \

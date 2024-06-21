@@ -48,7 +48,8 @@ if __name__ == "__main__":
     os.system("chmod +x ./s5cmd")
 
     print("*****************start cp pretrain model*****************************")
-    os.system("./s5cmd sync {0} {1}".format(os.environ['MODEL_S3_PATH'], os.environ["MODEL_LOCAL_PATH"]))
+    # os.system("./s5cmd sync {0} {1}".format(os.environ['MODEL_S3_PATH'], os.environ["MODEL_LOCAL_PATH"]))
+    os.system("aws s3 cp {0} {1} --recursive".format(os.environ['MODEL_S3_PATH'], os.environ["MODEL_LOCAL_PATH"]))
     print(f'-----finished cp-------')
 
 
