@@ -24,6 +24,7 @@ from ..extras.logging import get_logger
 from .model_utils.misc import find_all_linear_modules, find_expanded_modules
 from .model_utils.quantization import QuantizationMethod
 from .model_utils.unsloth import get_unsloth_peft_model, load_unsloth_peft_model
+from .model_utils.visual import get_forbidden_modules, patch_target_modules
 
 
 if TYPE_CHECKING:
@@ -37,7 +38,6 @@ logger = get_logger(__name__)
 
 def _setup_full_tuning(
     model: "PreTrainedModel",
-    model_args: "ModelArguments",
     finetuning_args: "FinetuningArguments",
     is_trainable: bool,
     cast_trainable_params_to_fp32: bool,
@@ -46,13 +46,7 @@ def _setup_full_tuning(
         return
 
     logger.info("Fine-tuning method: Full")
-    forbidden_modules = set()
-    if model_args.visual_inputs and finetuning_args.freeze_vision_tower:
-        forbidden_modules.add("vision_tower")
-
-    if model_args.visual_inputs and finetuning_args.train_mm_proj_only:
-        forbidden_modules.add("language_model")
-
+    forbidden_modules = get_forbidden_modules(model.config, finetuning_args)
     for name, param in model.named_parameters():
         if not any(forbidden_module in name for forbidden_module in forbidden_modules):
             if cast_trainable_params_to_fp32:
@@ -63,7 +57,6 @@ def _setup_full_tuning(
 
 def _setup_freeze_tuning(
     model: "PreTrainedModel",
-    model_args: "ModelArguments",
     finetuning_args: "FinetuningArguments",
     is_trainable: bool,
     cast_trainable_params_to_fp32: bool,
@@ -72,8 +65,8 @@ def _setup_freeze_tuning(
         return
 
     logger.info("Fine-tuning method: Freeze")
-    if model_args.visual_inputs:
-        config = model.config.text_config
+    if hasattr(model.config, "text_config"):  # composite models
+        config = getattr(model.config, "text_config")
     else:
         config = model.config
 
@@ -130,10 +123,7 @@ def _setup_freeze_tuning(
 
             trainable_layers.append(module_name)
 
-    forbidden_modules = set()
-    if model_args.visual_inputs and finetuning_args.freeze_vision_tower:
-        forbidden_modules.add("vision_tower")
-
+    forbidden_modules = get_forbidden_modules(model.config, finetuning_args)
     for name, param in model.named_parameters():
         if any(trainable_layer in name for trainable_layer in trainable_layers) and not any(
             forbidden_module in name for forbidden_module in forbidden_modules
@@ -211,8 +201,7 @@ def _setup_lora_tuning(
         if finetuning_args.use_llama_pro:
             target_modules = find_expanded_modules(model, target_modules, finetuning_args.freeze_trainable_layers)
 
-        if model_args.visual_inputs and finetuning_args.freeze_vision_tower:
-            target_modules = "^(?!.*vision_tower).*(?:{}).*".format("|".join(target_modules))
+        target_modules = patch_target_modules(model.config, finetuning_args, target_modules)
 
         if (
             finetuning_args.use_dora
@@ -289,24 +278,23 @@ def init_adapter(
             raise ValueError("Cannot initialize PiSSA adapter on quantized models.")
 
     # cast trainable parameters to float32 if:
-    # 1. is_trainable and quantization_bit is not None (qlora)
-    # 2. is_trainable and not deepspeed zero3 and not fsdp (zero3 or fsdp already in float32)
-    # 3. is_trainable and not pure_bf16 and not badam
+    # 1. is_trainable and not pure_bf16 and not badam and quantization_bit is not None (qlora)
+    # 2. is_trainable and not pure_bf16 and not badam and not zero3 and not fsdp (zero3 or fsdp already in fp32)
+    cast_trainable_params_to_fp32 = False
     if not is_trainable:
-        cast_trainable_params_to_fp32 = False
-    elif model_args.quantization_bit is None and (
-        is_deepspeed_zero3_enabled() or is_fsdp_enabled() or finetuning_args.pure_bf16 or finetuning_args.use_badam
-    ):
-        logger.info("ZeRO3/FSDP/PureBF16/BAdam detected, remaining trainable params as their original precision.")
-        cast_trainable_params_to_fp32 = False
+        pass
+    elif finetuning_args.pure_bf16 or finetuning_args.use_badam:
+        logger.info("Pure bf16 / BAdam detected, remaining trainable params in half precision.")
+    elif model_args.quantization_bit is None and (is_deepspeed_zero3_enabled() or is_fsdp_enabled()):
+        logger.info("ZeRO3 / FSDP detected, remaining trainable params in float32.")
     else:
         logger.info("Upcasting trainable params to float32.")
         cast_trainable_params_to_fp32 = True
 
     if finetuning_args.finetuning_type == "full":
-        _setup_full_tuning(model, model_args, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
+        _setup_full_tuning(model, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
     elif finetuning_args.finetuning_type == "freeze":
-        _setup_freeze_tuning(model, model_args, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
+        _setup_freeze_tuning(model, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
     elif finetuning_args.finetuning_type == "lora":
         model = _setup_lora_tuning(
             config, model, model_args, finetuning_args, is_trainable, cast_trainable_params_to_fp32

@@ -15,6 +15,7 @@
 from typing import TYPE_CHECKING, Dict
 
 from ...extras.packages import is_gradio_available
+from ..common import get_visual
 from .chatbot import create_chat_box
 
 
@@ -32,15 +33,26 @@ def create_infer_tab(engine: "Engine") -> Dict[str, "Component"]:
     input_elems = engine.manager.get_base_elems()
     elem_dict = dict()
 
-    infer_backend = gr.Dropdown(choices=["huggingface", "vllm"], value="huggingface")
+    with gr.Row():
+        infer_backend = gr.Dropdown(choices=["huggingface", "vllm"], value="huggingface")
+        infer_dtype = gr.Dropdown(choices=["auto", "float16", "bfloat16", "float32"], value="auto")
+
     with gr.Row():
         load_btn = gr.Button()
         unload_btn = gr.Button()
 
     info_box = gr.Textbox(show_label=False, interactive=False)
 
-    input_elems.update({infer_backend})
-    elem_dict.update(dict(infer_backend=infer_backend, load_btn=load_btn, unload_btn=unload_btn, info_box=info_box))
+    input_elems.update({infer_backend, infer_dtype})
+    elem_dict.update(
+        dict(
+            infer_backend=infer_backend,
+            infer_dtype=infer_dtype,
+            load_btn=load_btn,
+            unload_btn=unload_btn,
+            info_box=info_box,
+        )
+    )
 
     chatbot, messages, chat_elems = create_chat_box(engine, visible=False)
     elem_dict.update(chat_elems)
@@ -53,10 +65,10 @@ def create_infer_tab(engine: "Engine") -> Dict[str, "Component"]:
         lambda: ([], []), outputs=[chatbot, messages]
     ).then(lambda: gr.Column(visible=engine.chatter.loaded), outputs=[chat_elems["chat_box"]])
 
-    engine.manager.get_elem_by_id("top.visual_inputs").change(
-        lambda enabled: gr.Column(visible=enabled),
-        [engine.manager.get_elem_by_id("top.visual_inputs")],
-        [chat_elems["image_box"]],
+    engine.manager.get_elem_by_id("top.model_name").change(
+        lambda model_name: gr.Column(visible=get_visual(model_name)),
+        [engine.manager.get_elem_by_id("top.model_name")],
+        [chat_elems["mm_box"]],
     )
 
     return elem_dict
