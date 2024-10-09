@@ -1,6 +1,6 @@
 transformers>=4.41.2
-datasets>=2.16.0
-accelerate>=0.30.1
+datasets>=2.16.0,<=2.21.0
+accelerate==0.34.0
 peft>=0.11.1
 trl>=0.8.6
 gradio>=4.0.0
