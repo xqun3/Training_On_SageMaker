@@ -10,9 +10,9 @@ torchrun ${DISTRIBUTED_ARGS} \
     --stage sft \
     --do_train \
     --model_name_or_path $MODEL \
-    --dataset processed_QA_data,generate_data \
+    --dataset evol_instruct_code_12k \
     --dataset_dir data \
-    --template qwen \
+    --template llama \
     --finetuning_type full \
     --output_dir /tmp/finetuned_model \
     --overwrite_cache \
