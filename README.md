@@ -14,17 +14,17 @@
 |   |-- s5cmd                            
 |   |-- scripts                          # LLama-Factory 文件
 |   |-- src                              # LLama-Factory 文件
-|   `-- train_script_sagemaker.sh        # 训练启动脚本
+|   `-- train_script_sagemaker_sft_torchrun.sh        # 训练启动脚本
 |-- multi_nodel_deepspeed_lora.ipynb # 在 SageMaker 提交 Training Job 训练任务的示例代码
 `-- README.md
 ```
 
 # Training Job
-如果使用 Training Job，可以参考 [multi_nodel_deepspeed_lora.ipynb](https://github.com/xiaoqunnaws/Training_On_SageMaker/blob/main/multi_nodel_deepspeed_lora.ipynb) 这个 notebook 提交任务训练。跟据需要修改对应的训练机器个数以及类型即可。
+如果使用 Training Job，可以参考 [multi_nodel_llama3.1_sft.ipynb](https://github.com/xqun3/Training_On_SageMaker/blob/llama_factory_0.9.0/multi_nodel_llama3.1_sft.ipynb) 这个 notebook 提交任务训练。跟据需要修改对应的训练机器个数以及类型即可。
 
 
 # Notebook/本地环境
-如果使用 Notebook 或者本地机器启动训练任务，直接进入 llama_factory 文件夹，根据需要修改 [train_script_sagemaker.sh](https://github.com/xiaoqunnaws/Training_On_SageMaker/blob/main/llama_factory/train_script_sagemaker.sh) 模型路径即可，其他参数也可根据具体情况进行修改
+如果使用 Notebook 或者本地机器启动训练任务，直接进入 llama_factory 文件夹，根据需要修改 [train_script_sagemaker_sft_torchrun.sh](https://github.com/xqun3/Training_On_SageMaker/blob/llama_factory_0.9.0/llama_factory/train_script_sagemaker_sft_torchrun.sh) 模型路径即可，其他参数也可根据具体情况进行修改
 
 # 数据准备
 数据的格式准备可以参考 LLama-Factory 的数据格式进行准备，这里以准备的 alpaca 数据格式为例，假设我有这样的一个 jsonl 文件：
