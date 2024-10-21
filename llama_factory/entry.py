@@ -56,5 +56,5 @@ if __name__ == "__main__":
     os.system("/bin/bash -c ./train_script_sagemaker_sft_torchrun.sh")
 
     print("*****************finished training, start cp finetuned model*****************************")
-    os.system("./s5cmd sync {0} {1}".format("/tmp/finetuned_model", os.environ['OUTPUT_MODEL_S3_PATH']))
+    os.system("./s5cmd sync {0} {1}".format("/tmp/finetuned_model/*", os.environ['OUTPUT_MODEL_S3_PATH']))
     print(f'-----finished cp-------')
