@@ -27,23 +27,7 @@ if __name__ == "__main__":
     os.environ['NCCL_DEBUG'] = 'INFO'
     os.environ['HCCL_OVER_OFI'] = '1'
     
-    # num_machines = int(os.environ["NODE_NUMBER"])
-    # num_processes = int(os.environ["SM_NUM_GPUS"]) * num_machines
-    
-    # os.system("wandb disabled")
-    
-    # file_name = './ac_config.yaml'
-    # with open(file_name) as f:
-    #     doc = yaml.safe_load(f)
-    # doc['machine_rank'] = host_rank
-    # doc['main_process_ip'] = str(master_addr)
-    # doc['num_machines'] = num_machines  # how many intances in this training job
-    # doc['num_processes'] = num_processes  # how many GPU cards in total
-    # with open('./ac_config.yaml', 'w') as f:
-    #     yaml.safe_dump(doc, f)
-    #invoke the torch launcher shell script.
-    #Note: we will use the s5cmd to speed up the uploading model assets to S3.
-    os.system("chmod +x ./train_script_sagemaker_sft_torchrun.sh")
+    os.system("chmod +x ./train_script_sagemaker.sh")
     # os.system("chmod +x ./train_script_sagemaker.sh")
     os.system("chmod +x ./s5cmd")
 
@@ -53,8 +37,8 @@ if __name__ == "__main__":
     print(f'-----finished cp-------')
 
 
-    os.system("/bin/bash -c ./train_script_sagemaker_sft_torchrun.sh")
+    os.system("/bin/bash -c ./train_script_sagemaker.sh")
 
     print("*****************finished training, start cp finetuned model*****************************")
-    os.system("./s5cmd sync {0} {1}".format("/tmp/finetuned_model/*", os.environ['OUTPUT_MODEL_S3_PATH']))
+    os.system("./s5cmd sync {0} {1}".format("/tmp/finetuned_model/", os.environ['OUTPUT_MODEL_S3_PATH']))
     print(f'-----finished cp-------')
