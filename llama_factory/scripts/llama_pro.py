@@ -1,12 +1,25 @@
 # coding=utf-8
-# Performs block expansion for LLaMA, Mistral or Qwen1.5 models.
-# Usage: python llama_pro.py --model_name_or_path meta-llama/Llama-2-7b-hf --output_dir llama2_pro --num_expand 8
-# Inspired by: https://github.com/TencentARC/LLaMA-Pro/blob/main/scripts/block_expansion.py
+# Copyright 2024 Tencent Inc. and the LlamaFactory team.
+#
+# This code is inspired by the Tencent's LLaMA-Pro library.
+# https://github.com/TencentARC/LLaMA-Pro/blob/main/scripts/block_expansion.py
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import json
 import os
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import fire
 import torch
@@ -34,9 +47,13 @@ def block_expansion(
     model_name_or_path: str,
     output_dir: str,
     num_expand: int,
-    shard_size: Optional[str] = "2GB",
-    save_safetensors: Optional[bool] = False,
+    shard_size: str = "2GB",
+    save_safetensors: bool = True,
 ):
+    r"""
+    Performs block expansion for LLaMA, Mistral, Qwen1.5 or Yi models.
+    Usage: python llama_pro.py --model_name_or_path meta-llama/Llama-2-7b-hf --output_dir llama2_pro --num_expand 8
+    """
     config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)
     num_layers = getattr(config, "num_hidden_layers")
     setattr(config, "num_hidden_layers", num_layers + num_expand)
@@ -103,12 +120,11 @@ def block_expansion(
             json.dump(index, f, indent=2, sort_keys=True)
         print("Model weights saved in {}".format(output_dir))
 
-    print("Fine-tune this model with:")
-    print("  --model_name_or_path {} \\".format(output_dir))
-    print("  --finetuning_type freeze \\")
-    print("  --name_module_trainable all \\")
-    print("  --num_layer_trainable {} \\".format(num_expand))
-    print("  --use_llama_pro")
+    print("- Fine-tune this model with:")
+    print("model_name_or_path: {}".format(output_dir))
+    print("finetuning_type: freeze")
+    print("freeze_trainable_layers: {}".format(num_expand))
+    print("use_llama_pro: true")
 
 
 if __name__ == "__main__":
